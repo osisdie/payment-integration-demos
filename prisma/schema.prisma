@@ -1,0 +1,28 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model CheckoutPayment {
+  id                      String   @id @default(cuid())
+  stripeCheckoutSessionId String   @unique
+  paymentStatus           String
+  amountTotal             Int
+  currency                String
+  customerEmail           String?
+  createdAt               DateTime @default(now())
+}
+
+model SubscriptionRecord {
+  id                   String    @id @default(cuid())
+  stripeCustomerId     String
+  stripeSubscriptionId String    @unique
+  status               String
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
