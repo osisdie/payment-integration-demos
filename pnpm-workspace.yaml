@@ -1,3 +1,4 @@
 packages:
   - "stripe-checkout"
   - "opay-payment"
+  - "airwallex-payment"

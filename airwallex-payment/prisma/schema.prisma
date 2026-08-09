@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Tracks Airwallex payment intents created by this demo.
+model PaymentIntent {
+  id                String   @id @default(cuid())
+  airwallexIntentId String   @unique /// Airwallex payment_intent ID (e.g. "int_hk...")
+  requestId         String   @unique /// Our request_id for idempotency
+  amount            Float              /// Major-unit amount (e.g. 9.99)
+  currency          String             /// "USD", "HKD", etc.
+  descriptor        String?            /// Short description
+  paymentStatus     String   @default("INITIAL") /// INITIAL | REQUIRES_PAYMENT_METHOD | SUCCEEDED | CANCELLED
+  paymentMethod     String?            /// "card", etc. (populated by webhook)
+  merchantOrderId   String?            /// Our merchant_order_id
+  metadata          String?            /// JSON string of metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  refunds           Refund[]
+}
+
+/// Tracks refunds issued against payment intents.
+model Refund {
+  id                String   @id @default(cuid())
+  airwallexRefundId String   @unique /// Airwallex refund ID
+  paymentIntentId   String             /// FK to PaymentIntent
+  amount            Float              /// Refund amount (major unit)
+  currency          String
+  reason            String?
+  status            String   @default("CREATED") /// CREATED | SUCCEEDED | FAILED
+  createdAt         DateTime @default(now())
+
+  paymentIntent PaymentIntent @relation(fields: [paymentIntentId], references: [id])
+}
