@@ -1,4 +1,9 @@
-# payment-examples
+# payment-integration-demos
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Mono-repo of runnable **payment-integration demos** — TypeScript, Next.js (App Router), Prisma + SQLite.
 
@@ -83,6 +88,16 @@ ngrok http 3002
 | `pnpm test` | Run all tests |
 
 See each app's `package.json` for app-specific scripts.
+
+## Contributing
+
+We welcome contributions! Whether it's a bug fix, new feature, documentation improvement, or adding a new payment provider.
+
+- 📖 Read the [Contributing Guide](CONTRIBUTING.md)
+- 🐛 [Report a bug](https://github.com/osisdie/payment-integration-demos/issues/new?template=bug_report.md)
+- 💡 [Request a feature](https://github.com/osisdie/payment-integration-demos/issues/new?template=feature_request.md)
+- 💬 [Start a discussion](https://github.com/osisdie/payment-integration-demos/discussions)
+- 🔒 [Security policy](SECURITY.md)
 
 **License:** [MIT](LICENSE)
 
