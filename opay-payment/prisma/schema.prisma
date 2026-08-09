@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// B2B2C: Platform manages multiple sub-merchants.
+/// When platformId is set, the platform's HashKey/HashIV are used for crypto;
+/// MerchantID identifies the sub-merchant.
+model Merchant {
+  id             String   @id @default(cuid())
+  merchantId     String   @unique /// OPay MerchantID (e.g. "2000132")
+  platformId     String?  /// PlatformID for B2B2C (e.g. "3002599")
+  name           String
+  hashKey        String   /// Payment HashKey
+  hashIv         String   /// Payment HashIV
+  invoiceHashKey String?  /// E-Invoice HashKey (separate from payment)
+  invoiceHashIv  String?  /// E-Invoice HashIV
+  isTestMode     Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  orders         Order[]
+  invoices       Invoice[]
+}
+
+/// Payment orders — both AIO and TWQR payments are tracked here.
+model Order {
+  id                String   @id @default(cuid())
+  merchantId        String   /// OPay MerchantID
+  merchantTradeNo   String   @unique /// Unique trade number (max 20 chars)
+  tradeNo           String?  /// OPay's TradeNo (returned after creation)
+  paymentMethod     String   /// "Credit" | "TWQR" | "WebATM" | "ATM" | "CVS" | "Barcode" | "BNPL"
+  totalAmount       Int      /// TWD integer amount
+  tradeDesc         String
+  itemName          String
+  paymentStatus     String   @default("pending") /// pending | paid | failed | refunded | expired
+  rtnCode           Int?     /// OPay return code
+  rtnMsg            String?  /// OPay return message
+  // TWQR-specific
+  twqrCode          String?  /// QR code content string
+  twqrExpireDate    String?  /// QR code expiry (yyyy/MM/dd HH:mm:ss)
+  // Platform
+  platformId        String?  /// PlatformID if B2B2C
+  customField1      String?
+  customField2      String?
+  // Credit-specific
+  creditInstallment String?
+  // Timestamps (OPay format)
+  tradeDate         String?  /// yyyy/MM/dd HH:mm:ss
+  paymentDate       String?  /// From callback
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  merchant          Merchant @relation(fields: [merchantId], references: [merchantId])
+  invoices          Invoice[]
+  refunds           Refund[]
+}
+
+/// E-Invoice (電子發票) records.
+model Invoice {
+  id                 String   @id @default(cuid())
+  merchantId         String   /// OPay MerchantID
+  relateNumber       String   @unique /// Unique per invoice (links to order)
+  invoiceNo          String?  /// 10-char invoice number from OPay (e.g. "AA12345678")
+  invoiceDate        String?  /// Issue date
+  randomNumber       String?  /// 4-digit random code
+  // Customer info
+  customerIdentifier String?  /// VAT number (統一編號) for B2B invoices
+  customerName       String?
+  customerEmail      String?
+  customerPhone      String?
+  customerAddr       String?
+  // Invoice settings
+  print              String   @default("0") /// 0=no print, 1=print (required for VAT)
+  donation           String   @default("0") /// 0=no donate, 1=donate
+  loveCode           String?  /// Charity donation code
+  carrierType        String?  /// Carrier: ""=none, "1"=OPay, "2"=natural person, "3"=mobile barcode
+  carrierNum         String?  /// Carrier number
+  taxType            String   @default("1") /// 1=taxed, 2=zero-rate, 3=tax-free, 9=mixed
+  salesAmount        Int      /// Total including tax
+  invType            String   @default("07") /// 07=general, 08=special
+  status             String   @default("pending") /// pending | issued | voided | allowance
+  voidReason         String?
+  // Platform
+  platformId         String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  merchant           Merchant @relation(fields: [merchantId], references: [merchantId])
+  orderId            String?
+  order              Order?   @relation(fields: [orderId], references: [id])
+}
+
+/// Refund records — credit card DoAction and TWQR chargeback.
+model Refund {
+  id              String   @id @default(cuid())
+  orderId         String
+  merchantTradeNo String   /// Original order's trade number
+  tradeNo         String?  /// OPay trade number
+  action          String   /// "R"=refund, "E"=cancel auth, "C"=capture, "N"=void capture
+  totalAmount     Int      /// Refund amount (TWD)
+  status          String   @default("pending") /// pending | success | failed
+  rtnCode         Int?
+  rtnMsg          String?
+  createdAt       DateTime @default(now())
+  order           Order    @relation(fields: [orderId], references: [id])
+}

@@ -1,0 +1,42 @@
+{
+  "name": "opay-payment",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "prisma generate && next build",
+    "start": "next start --port 3001",
+    "lint": "eslint",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "test": "playwright test",
+    "screenshots": "playwright test e2e/screenshots.spec.ts",
+    "opay:query": "tsx scripts/opay-dev-query-trade.ts",
+    "opay:refund": "tsx scripts/opay-dev-refund.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "next": "16.2.6",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.59.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "dotenv": "^16.6.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.6",
+    "prisma": "^6.19.3",
+    "tailwindcss": "^4",
+    "tsx": "^4.21.0",
+    "typescript": "^5"
+  }
+}
