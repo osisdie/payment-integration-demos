@@ -114,6 +114,12 @@ export async function issueInvoice(
     body: JSON.stringify(request),
   });
 
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    const text = (await res.text()).slice(0, 200);
+    throw new Error(`OPay Invoice API returned non-JSON (HTTP ${res.status}): ${text}`);
+  }
+
   const envelope = (await res.json()) as InvoiceApiResponse;
   if (envelope.TransCode !== 1) {
     throw new Error(`Invoice Issue transport failed: [${envelope.TransCode}] ${envelope.TransMsg}`);
@@ -155,6 +161,12 @@ export async function voidInvoice(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
+
+  const voidContentType = res.headers.get("content-type") ?? "";
+  if (!voidContentType.includes("application/json")) {
+    const text = (await res.text()).slice(0, 200);
+    throw new Error(`OPay Invoice API returned non-JSON (HTTP ${res.status}): ${text}`);
+  }
 
   const envelope = (await res.json()) as InvoiceApiResponse;
   if (envelope.TransCode !== 1) {

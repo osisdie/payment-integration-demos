@@ -4,24 +4,36 @@ test.describe("docs/screenshots", () => {
   test("01-home — landing with all flow cards", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: /OPay 歐付寶/i })).toBeVisible();
-    await page.screenshot({ path: "../docs/screenshots/opay-01-home.png", fullPage: true });
+    await page.screenshot({ path: "../docs/screenshots/opay/01-home.png", fullPage: true });
   });
 
   test("02-checkout — AIO checkout form", async ({ page }) => {
     await page.goto("/checkout");
     await expect(page.getByRole("heading", { name: /AIO Checkout/i })).toBeVisible();
-    await page.screenshot({ path: "../docs/screenshots/opay-02-checkout.png", fullPage: true });
+    await page.screenshot({ path: "../docs/screenshots/opay/02-checkout.png", fullPage: true });
   });
 
   test("03-twqr — TWQR payment page", async ({ page }) => {
     await page.goto("/twqr");
     await expect(page.getByRole("heading", { name: /TWQR/i })).toBeVisible();
-    await page.screenshot({ path: "../docs/screenshots/opay-03-twqr.png", fullPage: true });
+    await page.screenshot({ path: "../docs/screenshots/opay/03-twqr.png", fullPage: true });
   });
 
   test("04-invoices — invoice issue form", async ({ page }) => {
     await page.goto("/invoices/issue");
     await expect(page.getByRole("heading", { name: /Issue Invoice/i })).toBeVisible();
-    await page.screenshot({ path: "../docs/screenshots/opay-04-invoice-issue.png", fullPage: true });
+    await page.screenshot({ path: "../docs/screenshots/opay/04-invoice-issue.png", fullPage: true });
+  });
+
+  test("05-orders — order list page", async ({ page }) => {
+    await page.goto("/orders");
+    await expect(page.getByRole("heading", { name: /訂單/i })).toBeVisible();
+    await page.screenshot({ path: "../docs/screenshots/opay/05-orders.png", fullPage: true });
+  });
+
+  test("06-refund — refund page", async ({ page }) => {
+    await page.goto("/refund");
+    await expect(page.getByRole("heading", { name: /退款/i })).toBeVisible();
+    await page.screenshot({ path: "../docs/screenshots/opay/06-refund.png", fullPage: true });
   });
 });

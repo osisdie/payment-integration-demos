@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { issueInvoice } from "@/lib/opay/invoice-client";
 import { invoiceConfig } from "@/lib/opay/config";
+import { sendInvoiceEmail } from "@/lib/email";
 import type { InvoiceIssueData } from "@/lib/opay/types";
 
 export const runtime = "nodejs";
@@ -89,11 +90,23 @@ export async function POST(request: Request): Promise<Response> {
       },
     });
 
+    // Send email notification (never throws — best-effort)
+    const emailResult = await sendInvoiceEmail(customerEmail, {
+      invoiceNo: result.InvoiceNo,
+      invoiceDate: result.InvoiceDate,
+      randomNumber: result.RandomNumber,
+      salesAmount: Math.round(Number(salesAmount)),
+      itemName: items[0]?.ItemName ?? "",
+      customerName: customerName,
+      relateNumber,
+    });
+
     return NextResponse.json({
       success: true,
       invoiceNo: result.InvoiceNo,
       invoiceDate: result.InvoiceDate,
       randomNumber: result.RandomNumber,
+      email: emailResult,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

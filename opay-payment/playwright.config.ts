@@ -21,6 +21,7 @@ export default defineConfig({
     command: "pnpm exec prisma migrate deploy && pnpm dev",
     url: "http://127.0.0.1:3001",
     reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
     env: {
       DATABASE_URL: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
       OPAY_ENV: "stage",

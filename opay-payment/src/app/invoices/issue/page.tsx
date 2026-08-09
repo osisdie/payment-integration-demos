@@ -52,7 +52,10 @@ export default function InvoiceIssuePage() {
         return;
       }
 
-      alert(`發票開立成功！\nInvoice No: ${data.invoiceNo}\nRandom: ${data.randomNumber}`);
+      const emailMsg = data.email?.sent
+        ? `\n📧 Email sent to: ${data.email.to}${data.email.fallback ? " (fallback)" : ""}`
+        : "\n📧 Email: not configured (set SMTP_* in .env)";
+      alert(`發票開立成功！\nInvoice No: ${data.invoiceNo}\nRandom: ${data.randomNumber}${emailMsg}`);
       router.push("/invoices");
     } catch {
       alert("Network error");
