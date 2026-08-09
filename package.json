@@ -2,40 +2,11 @@
   "name": "payment-examples",
   "version": "0.1.0",
   "private": true,
+  "description": "Mono-repo of runnable payment-integration demos (Stripe)",
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "start": "next start",
-    "lint": "eslint",
-    "postinstall": "prisma generate",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio",
-    "screenshots": "playwright test e2e/screenshots.spec.ts",
-    "screenshots:headed": "playwright test e2e/screenshots.spec.ts --headed",
-    "stripe:listen": "stripe listen --forward-to localhost:3000/api/webhooks/stripe",
-    "stripe:cancel-sub": "tsx scripts/stripe-dev-cancel-subscription.ts",
-    "stripe:refund-last": "tsx scripts/stripe-dev-refund-latest-payment.ts"
-  },
-  "dependencies": {
-    "@prisma/client": "^6.19.3",
-    "next": "16.2.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "stripe": "^22.1.1"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.59.1",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "dotenv": "^16.6.1",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.6",
-    "prisma": "^6.19.3",
-    "tailwindcss": "^4",
-    "tsx": "^4.21.0",
-    "typescript": "^5"
+    "dev:stripe": "pnpm --filter stripe-checkout dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
   }
 }

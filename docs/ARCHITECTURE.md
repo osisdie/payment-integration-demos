@@ -1,8 +1,19 @@
 # Architecture
 
-This repository is a **single Next.js (App Router) app** with Route Handlers acting as the backend. Data is stored in **SQLite** via **Prisma 6** (classic engine; no driver adapter required for local demos).
+This repository is a **pnpm-workspace mono-repo** with independent payment-integration demos. Each sub-project is a **Next.js (App Router)** app with **Prisma 6 + SQLite**.
 
-## Flow
+## Workspace Layout
+
+```
+payment-examples/
+├── stripe-checkout/      # Stripe Checkout (one-time + subscription)
+└── docs/
+    └── stripe/           # Stripe setup guides
+```
+
+---
+
+## Stripe Checkout Flow
 
 ```mermaid
 sequenceDiagram
@@ -21,22 +32,24 @@ sequenceDiagram
   Webhook->>Prisma: upsert CheckoutPayment or SubscriptionRecord
 ```
 
-## Persistence
+### Persistence
 
 | Model | Written when |
 |-------|----------------|
 | `CheckoutPayment` | `checkout.session.completed` with `mode=payment` |
-| `SubscriptionRecord` | Subscription checkout completes (via session + subscription retrieval) or subscription status webhooks |
+| `SubscriptionRecord` | Subscription checkout completes or subscription status webhooks |
 
-## Key files
+### Key files
 
 | Path | Role |
 |------|------|
-| [src/app/api/checkout/one-time/route.ts](../src/app/api/checkout/one-time/route.ts) | Stripe Checkout Session, `mode: payment` |
-| [src/app/api/checkout/subscribe/route.ts](../src/app/api/checkout/subscribe/route.ts) | Stripe Checkout Session, `mode: subscription` |
-| [src/app/api/webhooks/stripe/route.ts](../src/app/api/webhooks/stripe/route.ts) | Signature verification + DB writes |
-| [prisma/schema.prisma](../prisma/schema.prisma) | SQLite models |
+| [stripe-checkout/src/app/api/checkout/one-time/route.ts](../stripe-checkout/src/app/api/checkout/one-time/route.ts) | Stripe Checkout Session, `mode: payment` |
+| [stripe-checkout/src/app/api/checkout/subscribe/route.ts](../stripe-checkout/src/app/api/checkout/subscribe/route.ts) | Stripe Checkout Session, `mode: subscription` |
+| [stripe-checkout/src/app/api/webhooks/stripe/route.ts](../stripe-checkout/src/app/api/webhooks/stripe/route.ts) | Signature verification + DB writes |
+| [stripe-checkout/prisma/schema.prisma](../stripe-checkout/prisma/schema.prisma) | SQLite models |
+
+---
 
 ## Postgres (optional swap)
 
-Replace `provider = "sqlite"` with PostgreSQL in `schema.prisma`, set `DATABASE_URL` to your connection string, and run `pnpm db:migrate` again. Hosted templates often use Postgres for serverless concurrency; SQLite stays simplest for community clones.
+Replace `provider = "sqlite"` with PostgreSQL in either app's `schema.prisma`, set `DATABASE_URL` to your connection string, and run `pnpm db:migrate`. SQLite stays simplest for local demos.
