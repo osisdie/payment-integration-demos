@@ -7,7 +7,7 @@ test.describe("docs/screenshots", () => {
       page.getByRole("heading", { name: /Airwallex/i }),
     ).toBeVisible();
     await page.screenshot({
-      path: "../docs/screenshots/airwallex-01-home.png",
+      path: "../docs/screenshots/airwallex/01-home.png",
       fullPage: true,
     });
   });
@@ -18,7 +18,7 @@ test.describe("docs/screenshots", () => {
       page.getByRole("heading", { name: /Credit Card/i }),
     ).toBeVisible();
     await page.screenshot({
-      path: "../docs/screenshots/airwallex-02-checkout.png",
+      path: "../docs/screenshots/airwallex/02-checkout.png",
       fullPage: true,
     });
   });

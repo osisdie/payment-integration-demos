@@ -1,13 +1,45 @@
 # Screenshots
 
-Prefer **Playwright MCP** (configured in [`.cursor/mcp.json`](../../.cursor/mcp.json)): temporary captures go to **`.playwright-mcp/`** (ignored by Git). Copy winners here for the repo. Use **`pnpm screenshots`** for committed `01-home` / `03-success` via `@playwright/test`. Details: [`docs/playwright-mcp.md`](../playwright-mcp.md).
+Each app's screenshots are organized in subfolders:
 
-| File | What to capture |
-|------|-----------------|
-| `01-home.png` | Landing page (`/`) — `pnpm screenshots` or MCP |
-| `02-stripe-checkout.png` | Stripe-hosted Checkout — **MCP or manual only** |
-| `03-success.png` | Default: `/success` shell from test; after a real test payment, overwrite via MCP with `?session_id=…` |
-| `04-prisma-studio.png` | Prisma Studio — manual (`pnpm db:studio`) |
-| `05-stripe-cli.png` | Terminal `stripe listen --forward-to …` — manual |
+```
+docs/screenshots/
+├── stripe/         ← Stripe Checkout demos
+├── opay/           ← OPay 歐付寶 demos
+├── airwallex/      ← Airwallex demos
+└── README.md
+```
 
-Stripe’s hosted UI changes over time; keep README captions high-level.
+## How to generate
+
+```bash
+# Per app (headed mode — opens browser window)
+cd stripe-checkout  && npx playwright test --headed
+cd opay-payment     && npx playwright test --headed
+cd airwallex-payment && npx playwright test --headed
+```
+
+## Stripe
+
+| File | Page |
+|------|------|
+| `stripe/01-home.png` | Landing page with Checkout cards |
+| `stripe/03-success.png` | Success page shell |
+
+## OPay 歐付寶
+
+| File | Page |
+|------|------|
+| `opay/01-home.png` | Landing — 5 flow cards (AIO, TWQR, Orders, Invoice, Refund) |
+| `opay/02-checkout.png` | AIO credit card checkout form |
+| `opay/03-twqr.png` | TWQR dynamic QR code payment |
+| `opay/04-invoice-issue.png` | E-Invoice issue form |
+| `opay/05-orders.png` | Order list page |
+| `opay/06-refund.png` | Refund page |
+
+## Airwallex
+
+| File | Page |
+|------|------|
+| `airwallex/01-home.png` | Landing — 3 flow cards (Payment, Orders, Refund) |
+| `airwallex/02-checkout.png` | Credit card payment form |
