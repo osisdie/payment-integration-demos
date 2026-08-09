@@ -2,9 +2,10 @@
   "name": "payment-examples",
   "version": "0.1.0",
   "private": true,
-  "description": "Mono-repo of runnable payment-integration demos (Stripe)",
+  "description": "Mono-repo of runnable payment-integration demos (Stripe, OPay)",
   "scripts": {
     "dev:stripe": "pnpm --filter stripe-checkout dev",
+    "dev:opay": "pnpm --filter opay-payment dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test"

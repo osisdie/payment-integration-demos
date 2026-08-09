@@ -6,6 +6,7 @@ Mono-repo of runnable payment-integration demos. Each sub-project is a self-cont
 
 ```
 stripe-checkout/   — Stripe Checkout (one-time + subscription)
+opay-payment/      — OPay 歐付寶 (AIO credit card, TWQR, e-invoice, refund, reports)
 docs/              — shared documentation and specs
 ```
 
@@ -19,6 +20,12 @@ cd stripe-checkout
 cp .env.example .env  # fill Stripe keys
 pnpm db:migrate
 pnpm dev              # http://localhost:3000
+
+# OPay demo
+cd opay-payment
+cp .env.example .env  # fill OPay keys (stage defaults included)
+pnpm db:migrate
+pnpm dev              # http://localhost:3001
 ```
 
 ## Conventions
@@ -37,3 +44,11 @@ pnpm dev              # http://localhost:3000
 - Tailwind CSS 4
 - Playwright (E2E)
 - TypeScript 5
+
+## OPay-Specific Notes
+
+- No official Node.js SDK — `opay-payment/src/lib/opay/` is a custom implementation
+- Three separate credential sets: AIO payment, TWQR, E-Invoice
+- Two crypto methods: HMAC-SHA256 (CheckMacValue) and AES-128-CBC-PKCS7 (Data envelope)
+- B2B2C platform: PlatformID routes crypto through platform's keys, MerchantID identifies sub-merchant
+- Local dev callback: requires ngrok or cloudflared tunnel (unlike Stripe CLI)
