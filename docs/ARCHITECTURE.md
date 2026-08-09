@@ -8,9 +8,11 @@ This repository is a **pnpm-workspace mono-repo** with independent payment-integ
 payment-examples/
 ├── stripe-checkout/      # Stripe Checkout (one-time + subscription)
 ├── opay-payment/         # OPay 歐付寶 (AIO credit card, TWQR, e-invoice, refund, reports)
+├── airwallex-payment/    # Airwallex (Hosted Payment Page, webhook, refund)
 └── docs/
     ├── stripe/           # Stripe setup guides
-    └── opay/             # OPay PDF specs (TWQR, AIO, e-invoice, merchant backend)
+    ├── opay/             # OPay PDF specs (TWQR, AIO, e-invoice, merchant backend)
+    └── airwallex/        # Airwallex setup + local verify
 ```
 
 ---
@@ -136,6 +138,69 @@ sequenceDiagram
 | `opay-payment/src/lib/opay/twqr-client.ts` | TWQR QR payment API wrapper |
 | `opay-payment/src/lib/opay/invoice-client.ts` | E-Invoice API wrapper |
 | `opay-payment/prisma/schema.prisma` | Merchant, Order, Invoice, Refund models |
+
+---
+
+## Airwallex Payment Flow
+
+```mermaid
+sequenceDiagram
+  participant Browser
+  participant NextAPI
+  participant AirwallexAPI
+  participant Webhook
+  participant Prisma
+
+  Browser->>NextAPI: POST /api/checkout
+  NextAPI->>AirwallexAPI: POST /authentication/login
+  AirwallexAPI-->>NextAPI: Bearer token (cached)
+  NextAPI->>AirwallexAPI: POST /pa/payment_intents/create
+  AirwallexAPI-->>NextAPI: { id, client_secret }
+  NextAPI->>Prisma: Create PaymentIntent (INITIAL)
+  NextAPI-->>Browser: { payment_intent_id, client_secret }
+  Browser->>Browser: @airwallex/components-sdk init()
+  Browser->>AirwallexAPI: redirectToCheckout (Hosted Payment Page)
+  Note over Browser,AirwallexAPI: Customer enters card details
+  AirwallexAPI-->>Browser: Redirect to /success
+  AirwallexAPI->>Webhook: POST /api/webhooks/airwallex (HMAC signed)
+  Webhook->>Webhook: Verify x-timestamp + x-signature
+  Webhook->>Prisma: Update PaymentIntent → SUCCEEDED
+```
+
+### Refund Flow
+
+```mermaid
+sequenceDiagram
+  participant Browser
+  participant NextAPI
+  participant AirwallexAPI
+  participant Prisma
+
+  Browser->>NextAPI: POST /api/refund
+  NextAPI->>Prisma: Look up PaymentIntent
+  NextAPI->>AirwallexAPI: POST /pa/refunds/create
+  AirwallexAPI-->>NextAPI: Refund object
+  NextAPI->>Prisma: Create Refund record
+  NextAPI-->>Browser: Refund result
+```
+
+### Persistence
+
+| Model | Written when |
+|-------|-------------|
+| `PaymentIntent` | Checkout creates intent; webhook updates status |
+| `Refund` | Refund request; webhook confirms |
+
+### Key files
+
+| Path | Role |
+|------|------|
+| `airwallex-payment/src/lib/airwallex/auth.ts` | Bearer token acquisition + cache |
+| `airwallex-payment/src/lib/airwallex/client.ts` | Payment intent + refund API wrappers |
+| `airwallex-payment/src/lib/airwallex/webhook.ts` | HMAC-SHA256 signature verification |
+| `airwallex-payment/src/app/api/checkout/route.ts` | Create payment intent |
+| `airwallex-payment/src/app/api/webhooks/airwallex/route.ts` | Webhook handler |
+| `airwallex-payment/prisma/schema.prisma` | PaymentIntent, Refund models |
 
 ---
 

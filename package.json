@@ -2,10 +2,11 @@
   "name": "payment-examples",
   "version": "0.1.0",
   "private": true,
-  "description": "Mono-repo of runnable payment-integration demos (Stripe, OPay)",
+  "description": "Mono-repo of runnable payment-integration demos (Stripe, OPay, Airwallex)",
   "scripts": {
     "dev:stripe": "pnpm --filter stripe-checkout dev",
     "dev:opay": "pnpm --filter opay-payment dev",
+    "dev:airwallex": "pnpm --filter airwallex-payment dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test"
