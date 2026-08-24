@@ -122,6 +122,7 @@ export interface TwqrCreateResponseData {
 
 export interface TwqrCallbackData {
   MerchantID: string;
+  PlatformID?: string;
   StoreID?: string;
   TradeNo: string;
   MerchantTradeNo: string;
@@ -129,7 +130,7 @@ export interface TwqrCallbackData {
   CreateDate: string;
   IssCode?: string;
   IssName?: string;
-  Status: number; // 1=paid, 2=full refund, 3=partial refund, 4=failed
+  Status: string; // "1"=paid, "2"=full refund, "3"=partial refund, "4"=failed
   TradeDate: string;
   TradeAmt: number;
   RefundAmt?: number;
@@ -140,9 +141,9 @@ export interface TwqrQueryResponseData {
   MerchantID: string;
   TradeNo: string;
   MerchantTradeNo: string;
-  Status: number; // 0=unpaid, 1=paid, 2=full refund, 3=partial refund, 4=failed
+  TradeStatus: string; // "0"=unpaid, "1"=paid, "2"=full refund, "3"=partial refund, "4"=failed
   TradeAmt: number;
-  TradeDate: string;
+  TradeDate: string | null;
   ExpireDate: string;
   CheckMacValue: string;
 }
