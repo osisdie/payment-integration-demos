@@ -21,7 +21,7 @@ export async function POST(request: Request): Promise<Response> {
     const result = await queryTwqrTrade(tradeNo);
 
     return NextResponse.json({
-      status: result.Status,
+      status: parseInt(result.TradeStatus, 10),
       tradeAmt: result.TradeAmt,
       tradeDate: result.TradeDate,
       expireDate: result.ExpireDate,

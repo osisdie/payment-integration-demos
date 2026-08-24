@@ -15,12 +15,15 @@ interface OrderRow {
 export default function RefundPage() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<string>("");
+  const [manualTradeNo, setManualTradeNo] = useState("");
+  const [manualOrder, setManualOrder] = useState<OrderRow | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
   const [refundAmount, setRefundAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
-    // Fetch paid orders for refund selection
     fetch("/api/query/orders")
       .then((r) => r.json())
       .then((data) => {
@@ -29,7 +32,31 @@ export default function RefundPage() {
       .catch(() => {});
   }, []);
 
-  const selected = orders.find((o) => o.id === selectedOrder);
+  const selected = manualOrder ?? orders.find((o) => o.id === selectedOrder) ?? null;
+
+  async function handleSearch() {
+    const q = manualTradeNo.trim();
+    if (!q) return;
+    setSearching(true);
+    setSearchError("");
+    setManualOrder(null);
+    setSelectedOrder("");
+    setResult(null);
+
+    try {
+      const res = await fetch(`/api/query/orders?search=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setManualOrder(data[0]);
+        setRefundAmount(String(data[0].totalAmount));
+      } else {
+        setSearchError("找不到此訂單 Order not found");
+      }
+    } catch {
+      setSearchError("查詢失敗 Network error");
+    }
+    setSearching(false);
+  }
 
   async function handleRefund(e: React.FormEvent) {
     e.preventDefault();
@@ -73,16 +100,68 @@ export default function RefundPage() {
       <h1 className="mb-6 text-2xl font-bold">退款 Refund</h1>
 
       <form onSubmit={handleRefund} className="space-y-4">
+        {/* Manual trade number input */}
         <div>
-          <label className="mb-1 block text-sm text-neutral-400">選擇訂單 Select Order</label>
+          <label className="mb-1 block text-sm text-neutral-400">
+            輸入訂單編號 Enter Trade No
+          </label>
+          <div className="flex gap-2">
+            <input
+              value={manualTradeNo}
+              onChange={(e) => {
+                setManualTradeNo(e.target.value);
+                if (manualOrder) {
+                  setManualOrder(null);
+                  setSearchError("");
+                }
+              }}
+              placeholder="e.g. 20260823163359rhnokb"
+              className="flex-1 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-100 outline-none focus:border-rose-500"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSearch();
+                }
+              }}
+            />
+            <button
+              type="button"
+              onClick={handleSearch}
+              disabled={searching || !manualTradeNo.trim()}
+              className="rounded-lg bg-neutral-700 px-4 py-2 text-sm font-medium text-neutral-200 transition hover:bg-neutral-600 disabled:opacity-50"
+            >
+              {searching ? "…" : "查詢"}
+            </button>
+          </div>
+          {searchError && (
+            <p className="mt-1 text-xs text-red-400">{searchError}</p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 text-xs text-neutral-600">
+          <span className="h-px flex-1 bg-neutral-800" />
+          或 OR
+          <span className="h-px flex-1 bg-neutral-800" />
+        </div>
+
+        {/* Dropdown selection */}
+        <div>
+          <label className="mb-1 block text-sm text-neutral-400">
+            下拉選擇 Select Order
+          </label>
           <select
-            value={selectedOrder}
+            value={manualOrder ? "" : selectedOrder}
             onChange={(e) => {
               setSelectedOrder(e.target.value);
+              setManualOrder(null);
+              setManualTradeNo("");
+              setSearchError("");
+              setResult(null);
               const o = orders.find((o) => o.id === e.target.value);
               if (o) setRefundAmount(String(o.totalAmount));
             }}
-            className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-100 outline-none focus:border-rose-500"
+            disabled={!!manualOrder}
+            className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-100 outline-none focus:border-rose-500 disabled:opacity-50"
           >
             <option value="">-- 請選擇 --</option>
             {orders.map((o) => (
@@ -100,6 +179,7 @@ export default function RefundPage() {
               <p><span className="text-neutral-400">OPay Trade No:</span> {selected.tradeNo ?? "—"}</p>
               <p><span className="text-neutral-400">Method:</span> {selected.paymentMethod}</p>
               <p><span className="text-neutral-400">Amount:</span> NT$ {selected.totalAmount}</p>
+              <p><span className="text-neutral-400">Status:</span> {selected.paymentStatus}</p>
               <p className="text-xs text-neutral-500 mt-1">
                 Endpoint: {selected.paymentMethod === "TWQR" ? "/api/refund/twqr" : "/api/refund/credit"}
               </p>
