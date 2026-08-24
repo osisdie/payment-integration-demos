@@ -38,24 +38,17 @@ function buildInvoiceRequest(
   };
 }
 
-/**
- * Format invoice items for the API.
- * Items are sent as pipe-separated strings within the Data payload.
- */
 function formatInvoiceItems(items: InvoiceIssueData["Items"]) {
-  return {
-    ItemName: items.map((i) => i.ItemName).join("|"),
-    ItemCount: items.map((i) => i.ItemCount).join("|"),
-    ItemWord: items.map((i) => i.ItemWord).join("|"),
-    ItemPrice: items.map((i) => i.ItemPrice).join("|"),
-    ItemAmount: items.map((i) => i.ItemAmount).join("|"),
-    ...(items.some((i) => i.ItemTaxType)
-      ? { ItemTaxType: items.map((i) => i.ItemTaxType ?? "").join("|") }
-      : {}),
-    ...(items.some((i) => i.ItemRemark)
-      ? { ItemRemark: items.map((i) => i.ItemRemark ?? "").join("|") }
-      : {}),
-  };
+  return items.map((item, idx) => ({
+    ItemSeq: idx + 1,
+    ItemName: item.ItemName,
+    ItemCount: item.ItemCount,
+    ItemWord: item.ItemWord,
+    ItemPrice: item.ItemPrice,
+    ItemAmount: item.ItemAmount,
+    ...(item.ItemTaxType ? { ItemTaxType: item.ItemTaxType } : {}),
+    ...(item.ItemRemark ? { ItemRemark: item.ItemRemark } : {}),
+  }));
 }
 
 /**
@@ -79,8 +72,6 @@ export async function issueInvoice(
     invoiceData.CarrierNum = "";
   }
 
-  const items = formatInvoiceItems(invoiceData.Items);
-
   const data: Record<string, unknown> = {
     MerchantID: config.merchantId,
     RelateNumber: invoiceData.RelateNumber,
@@ -100,7 +91,7 @@ export async function issueInvoice(
     InvoiceRemark: invoiceData.InvoiceRemark ?? "",
     InvType: invoiceData.InvType,
     vat: invoiceData.vat ?? "1",
-    ...items,
+    Items: formatInvoiceItems(invoiceData.Items),
   };
 
   if (invoiceData.ClearanceMark) data.ClearanceMark = invoiceData.ClearanceMark;
