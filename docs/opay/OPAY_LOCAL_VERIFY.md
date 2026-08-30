@@ -54,9 +54,33 @@ Restart `pnpm dev` after updating `.env`.
 
 1. Click **電子發票** → **開立發票**
 2. Fill in item details and amount
-3. For B2B: check "B2B 三聯式" and enter 統一編號 (8 digits)
-4. Click **開立發票**
-5. Invoice number (e.g. `UV11100012`) is returned on success
+3. Optional: enter **Store ID** (門市代號) and/or **Merchant ID** (子商戶，B2B2C 平台用)
+4. **Carrier types** (載具):
+   - 無 (None) — default
+   - 手機條碼 (Mobile Barcode) — format: `/ABC+123`
+   - 自然人憑證 (Citizen Digital Certificate) — 16-char code
+   - OPay 會員載具
+5. For B2B: check "B2B 三聯式" and enter 統一編號 (8 digits)
+   - Automatically enforces: Print=1, Donation=0, CarrierType=empty
+6. Click **開立發票**
+7. Invoice number (e.g. `KA10002291`) is returned on success
+8. Email notification sent to the customer email address
+
+### 5a. Invoice Query API — 發票查詢
+
+```bash
+# List all invoices
+curl http://localhost:3001/api/query/invoices
+
+# Filter by storeId
+curl http://localhost:3001/api/query/invoices?storeId=STORE001
+
+# Filter by invoiceNo
+curl http://localhost:3001/api/query/invoices?invoiceNo=KA10002291
+
+# Filter by status
+curl http://localhost:3001/api/query/invoices?status=issued
+```
 
 ### 6. Refund — 退款
 
@@ -83,5 +107,7 @@ pnpm opay:query
 | CheckMacValue Error | Verify HashKey/HashIV in `.env`. Different API systems use different keys. |
 | Callback not received | Ensure ngrok is running and `NEXT_PUBLIC_APP_URL` matches the ngrok URL. |
 | Invoice Issue fails | Check that the invoice credentials (`OPAY_INVOICE_HASH_KEY/IV`) are correct. |
+| Invoice 解密失敗 | E-Invoice uses a different AES encryption order than TWQR. Ensure `invoiceMode: true` is passed. |
 | TWQR timeout | QR codes expire in 10 minutes (default). Try a new one. |
 | `TransCode != 1` | E-Invoice transport layer error. Check Timestamp is within 10 minutes of server time. |
+| Carrier 格式錯誤 | Mobile barcode must start with `/` (e.g. `/ABC+123`). Citizen cert is 16 chars. |

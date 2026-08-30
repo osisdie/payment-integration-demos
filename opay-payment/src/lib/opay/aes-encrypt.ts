@@ -1,19 +1,15 @@
 /**
- * AES-128-CBC encryption with PKCS7 padding for OPay TWQR and E-Invoice APIs.
+ * AES-128-CBC encryption with PKCS7 padding for OPay APIs.
  *
- * Algorithm (from OPay TWQR spec Appendix 2):
- * Encrypt:
- *   1. Take JSON string as plaintext
- *   2. AES-128-CBC encrypt (key = HashKey as UTF-8 16 bytes, IV = HashIV as UTF-8 16 bytes)
- *   3. PKCS7 padding (default for Node.js crypto aes-128-cbc)
- *   4. Base64 encode the ciphertext
- *   5. URL-encode the Base64 string
+ * TWQR and E-Invoice use different URL-encoding sequences:
  *
- * Decrypt (for parsing responses):
- *   1. URL-decode
- *   2. Base64 decode
- *   3. AES-128-CBC decrypt
- *   4. Parse JSON
+ * TWQR (default):
+ *   Encrypt: JSON → AES → Base64 → URL encode
+ *   Decrypt: URL decode → Base64 → AES → JSON parse
+ *
+ * E-Invoice (invoiceMode):
+ *   Encrypt: JSON → URL encode → AES → Base64
+ *   Decrypt: Base64 → AES → URL decode → JSON parse
  */
 import { createCipheriv, createDecipheriv } from "crypto";
 import { dotnetUrlDecode } from "./url-encode";
@@ -22,28 +18,43 @@ const ALGORITHM = "aes-128-cbc";
 
 /**
  * Encrypt a JSON-serializable object for OPay API requests.
- * Returns a URL-encoded Base64 string ready to use as the "Data" field.
+ *
+ * Default (TWQR): JSON → AES → Base64 → URL encode
+ * invoiceMode:    JSON → URL encode → AES → Base64
  */
-export function aesEncrypt(data: unknown, hashKey: string, hashIV: string): string {
+export function aesEncrypt(
+  data: unknown,
+  hashKey: string,
+  hashIV: string,
+  options?: { invoiceMode?: boolean },
+): string {
   const json = typeof data === "string" ? data : JSON.stringify(data);
+  const plaintext = options?.invoiceMode ? encodeURIComponent(json) : json;
+
   const key = Buffer.from(hashKey, "utf8");
   const iv = Buffer.from(hashIV, "utf8");
 
   const cipher = createCipheriv(ALGORITHM, key, iv);
-  let encrypted = cipher.update(json, "utf8", "base64");
+  let encrypted = cipher.update(plaintext, "utf8", "base64");
   encrypted += cipher.final("base64");
 
-  // URL-encode the Base64 string
-  return encodeURIComponent(encrypted);
+  return options?.invoiceMode ? encrypted : encodeURIComponent(encrypted);
 }
 
 /**
  * Decrypt an OPay API response "Data" field.
- * Input is URL-encoded Base64; returns the parsed JSON object.
+ *
+ * Default (TWQR): URL decode → Base64 → AES → JSON parse
+ * invoiceMode:    Base64 → AES → URL decode → JSON parse
  */
-export function aesDecrypt<T = unknown>(encrypted: string, hashKey: string, hashIV: string): T {
-  // URL-decode first
-  const base64 = dotnetUrlDecode(encrypted);
+export function aesDecrypt<T = unknown>(
+  encrypted: string,
+  hashKey: string,
+  hashIV: string,
+  options?: { invoiceMode?: boolean },
+): T {
+  const base64 = options?.invoiceMode ? encrypted : dotnetUrlDecode(encrypted);
+
   const key = Buffer.from(hashKey, "utf8");
   const iv = Buffer.from(hashIV, "utf8");
 
@@ -51,5 +62,6 @@ export function aesDecrypt<T = unknown>(encrypted: string, hashKey: string, hash
   let decrypted = decipher.update(base64, "base64", "utf8");
   decrypted += decipher.final("utf8");
 
-  return JSON.parse(decrypted) as T;
+  const text = options?.invoiceMode ? decodeURIComponent(decrypted) : decrypted;
+  return JSON.parse(text) as T;
 }

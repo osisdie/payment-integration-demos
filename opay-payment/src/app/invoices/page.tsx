@@ -41,6 +41,9 @@ export default async function InvoicesPage() {
                 <th className="pb-3 pr-4">Invoice No</th>
                 <th className="pb-3 pr-4">Relate No</th>
                 <th className="pb-3 pr-4">Amount</th>
+                <th className="pb-3 pr-4">Merchant</th>
+                <th className="pb-3 pr-4">Store</th>
+                <th className="pb-3 pr-4">Carrier</th>
                 <th className="pb-3 pr-4">VAT (統編)</th>
                 <th className="pb-3 pr-4">Status</th>
                 <th className="pb-3">Date</th>
@@ -54,6 +57,11 @@ export default async function InvoicesPage() {
                   </td>
                   <td className="py-3 pr-4 font-mono text-xs">{inv.relateNumber}</td>
                   <td className="py-3 pr-4">NT$ {inv.salesAmount.toLocaleString()}</td>
+                  <td className="py-3 pr-4 text-xs">{inv.merchantId}</td>
+                  <td className="py-3 pr-4 text-xs">{inv.storeId || "—"}</td>
+                  <td className="py-3 pr-4 text-xs">
+                    {inv.carrierType ? `${inv.carrierType === "3" ? "手機" : inv.carrierType === "2" ? "自然人" : "OPay"} ${inv.carrierNum ?? ""}` : "—"}
+                  </td>
                   <td className="py-3 pr-4 text-xs">
                     {inv.customerIdentifier || "—"}
                   </td>

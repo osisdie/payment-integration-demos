@@ -83,7 +83,8 @@ model Invoice {
   invType            String   @default("07") /// 07=general, 08=special
   status             String   @default("pending") /// pending | issued | voided | allowance
   voidReason         String?
-  // Platform
+  // Store / Platform
+  storeId            String?  /// StoreID passed during invoice issue
   platformId         String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt

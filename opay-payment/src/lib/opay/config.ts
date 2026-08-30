@@ -91,7 +91,7 @@ export const TWQR_ENDPOINTS = {
 
 export const INVOICE_ENDPOINTS = {
   issue: "/B2CInvoice/Issue",
-  invalid: "/B2CInvoice/IssueInvalid",
+  invalid: "/B2CInvoice/Invalid",
   allowance: "/B2CInvoice/AllowanceByCollegiate",
   query: "/B2CInvoice/Issue",
 } as const;

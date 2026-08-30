@@ -33,6 +33,8 @@ export async function POST(request: Request): Promise<Response> {
       salesAmount,
       invType,
       items,
+      storeId,
+      merchantId,
     } = body;
 
     if (!relateNumber || !salesAmount || !items?.length) {
@@ -43,8 +45,9 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const config = invoiceConfig();
+    const effectiveMerchantId = merchantId || config.merchantId;
     const invoiceData: InvoiceIssueData = {
-      MerchantID: config.merchantId,
+      MerchantID: effectiveMerchantId,
       RelateNumber: relateNumber,
       CustomerIdentifier: customerIdentifier ?? "",
       CustomerName: customerName ?? "",
@@ -60,6 +63,7 @@ export async function POST(request: Request): Promise<Response> {
       SalesAmount: Math.round(Number(salesAmount)),
       InvType: invType ?? "07",
       Items: items,
+      StoreID: storeId,
     };
 
     const result = await issueInvoice(invoiceData);
@@ -67,7 +71,7 @@ export async function POST(request: Request): Promise<Response> {
     // Save invoice record
     await prisma.invoice.create({
       data: {
-        merchantId: config.merchantId,
+        merchantId: effectiveMerchantId,
         relateNumber,
         invoiceNo: result.InvoiceNo,
         invoiceDate: result.InvoiceDate,
@@ -86,6 +90,7 @@ export async function POST(request: Request): Promise<Response> {
         salesAmount: Math.round(Number(salesAmount)),
         invType: invType ?? "07",
         status: "issued",
+        storeId: storeId || null,
         orderId: orderId || null,
       },
     });

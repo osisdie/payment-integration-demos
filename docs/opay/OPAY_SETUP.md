@@ -36,6 +36,19 @@ The `.env.example` comes pre-filled with OPay stage credentials. You can start t
 
 Set `OPAY_PLATFORM_ID` to enable platform mode. The platform's own HashKey/HashIV are used for encryption, while `OPAY_MERCHANT_ID` identifies the sub-merchant.
 
+For invoices, `merchantId` can be overridden per-request (via the UI or API) to issue invoices on behalf of sub-merchants. If omitted, the env default is used.
+
+### AES Encryption — 加密順序差異
+
+TWQR and E-Invoice APIs use **different** AES encryption sequences:
+
+| API | Encrypt | Decrypt |
+|-----|---------|---------|
+| **TWQR** | JSON → AES → Base64 → URL encode | URL decode → Base64 → AES → JSON |
+| **E-Invoice** | JSON → URL encode → AES → Base64 | Base64 → AES → URL decode → JSON |
+
+The code handles this automatically via `invoiceMode` in `aes-encrypt.ts`.
+
 ## Callback URL (ReturnURL) — 回呼網址
 
 Unlike Stripe CLI (which has built-in forwarding), OPay requires a **publicly accessible URL** for payment callbacks.
@@ -94,3 +107,9 @@ cloudflared tunnel --url http://localhost:3001
 ### B2B2C 平台
 
 設定 `OPAY_PLATFORM_ID` 啟用平台模式。平台使用自己的 HashKey/HashIV 加密，`OPAY_MERCHANT_ID` 為子特店編號。
+
+發票開立時可在請求中帶入 `merchantId` 覆蓋預設值，讓平台商可以指定子商戶開發票。
+
+### 加密順序
+
+TWQR 和電子發票的 AES 加密順序不同（詳見上方英文說明），程式透過 `invoiceMode` 自動處理。
