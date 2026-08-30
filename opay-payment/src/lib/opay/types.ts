@@ -207,6 +207,7 @@ export interface InvoiceIssueData {
   Items: InvoiceItem[];
   InvType: "07" | "08"; // 07=general, 08=special
   vat?: "1" | "0"; // 1=tax-included (default)
+  StoreID?: string;
 }
 
 export interface InvoiceIssueResponseData {
@@ -218,7 +219,7 @@ export interface InvoiceIssueResponseData {
 }
 
 export interface InvoiceVoidData {
-  MerchantID: string;
+  MerchantID?: string;
   InvoiceNo: string;
   InvoiceDate: string;
   Reason: string;

@@ -16,10 +16,12 @@ export default function InvoiceIssuePage() {
     const form = new FormData(e.currentTarget);
     const body = {
       relateNumber: form.get("relateNumber"),
+      merchantId: form.get("merchantId") || undefined,
       customerIdentifier: form.get("customerIdentifier") || undefined,
       customerName: form.get("customerName") || undefined,
       customerEmail: form.get("customerEmail") || undefined,
       customerPhone: form.get("customerPhone") || undefined,
+      storeId: form.get("storeId") || undefined,
       print: hasVat ? "1" : "0",
       donation: "0",
       carrierType: hasVat ? "" : (form.get("carrierType") || ""),
@@ -82,6 +84,26 @@ export default function InvoiceIssuePage() {
             defaultValue={defaultRelateNo}
             className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-100 outline-none focus:border-violet-500"
           />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1 block text-sm text-neutral-400">門市代號 Store ID</label>
+            <input
+              name="storeId"
+              placeholder="e.g. STORE001"
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-100 outline-none focus:border-violet-500"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm text-neutral-400">商戶編號 Merchant ID</label>
+            <input
+              name="merchantId"
+              placeholder="留空=env預設 (2000132)"
+              className="w-full rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-neutral-100 outline-none focus:border-violet-500"
+            />
+            <p className="mt-1 text-xs text-neutral-500">B2B2C 平台商可指定子商戶</p>
+          </div>
         </div>
 
         {/* B2B VAT toggle */}

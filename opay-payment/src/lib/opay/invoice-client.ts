@@ -25,12 +25,13 @@ import type {
  */
 function buildInvoiceRequest(
   data: Record<string, unknown>,
+  merchantId: string,
   config: ReturnType<typeof invoiceConfig>,
 ): InvoiceApiRequest {
   const encrypted = aesEncrypt(data, config.hashKey, config.hashIV, { invoiceMode: true });
 
   return {
-    MerchantID: config.merchantId,
+    MerchantID: merchantId,
     RqHeader: {
       Timestamp: Math.floor(Date.now() / 1000),
     },
@@ -63,6 +64,7 @@ export async function issueInvoice(
   invoiceData: InvoiceIssueData,
 ): Promise<InvoiceIssueResponseData> {
   const config = invoiceConfig();
+  const merchantId = invoiceData.MerchantID || config.merchantId;
 
   // Enforce B2B VAT rules
   if (invoiceData.CustomerIdentifier) {
@@ -73,7 +75,7 @@ export async function issueInvoice(
   }
 
   const data: Record<string, unknown> = {
-    MerchantID: config.merchantId,
+    MerchantID: merchantId,
     RelateNumber: invoiceData.RelateNumber,
     CustomerID: invoiceData.CustomerID ?? "",
     CustomerIdentifier: invoiceData.CustomerIdentifier ?? "",
@@ -95,8 +97,9 @@ export async function issueInvoice(
   };
 
   if (invoiceData.ClearanceMark) data.ClearanceMark = invoiceData.ClearanceMark;
+  if (invoiceData.StoreID) data.StoreID = invoiceData.StoreID;
 
-  const request = buildInvoiceRequest(data, config);
+  const request = buildInvoiceRequest(data, merchantId, config);
 
   const url = `${invoiceBaseUrl()}${INVOICE_ENDPOINTS.issue}`;
   const res = await fetch(url, {
@@ -137,15 +140,16 @@ export async function voidInvoice(
   voidData: InvoiceVoidData,
 ): Promise<InvoiceVoidResponseData> {
   const config = invoiceConfig();
+  const merchantId = voidData.MerchantID || config.merchantId;
 
   const data: Record<string, unknown> = {
-    MerchantID: config.merchantId,
+    MerchantID: merchantId,
     InvoiceNo: voidData.InvoiceNo,
     InvoiceDate: voidData.InvoiceDate,
     Reason: voidData.Reason,
   };
 
-  const request = buildInvoiceRequest(data, config);
+  const request = buildInvoiceRequest(data, merchantId, config);
 
   const url = `${invoiceBaseUrl()}${INVOICE_ENDPOINTS.invalid}`;
   const res = await fetch(url, {
