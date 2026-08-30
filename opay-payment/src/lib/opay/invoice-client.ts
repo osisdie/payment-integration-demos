@@ -27,7 +27,7 @@ function buildInvoiceRequest(
   data: Record<string, unknown>,
   config: ReturnType<typeof invoiceConfig>,
 ): InvoiceApiRequest {
-  const encrypted = aesEncrypt(data, config.hashKey, config.hashIV);
+  const encrypted = aesEncrypt(data, config.hashKey, config.hashIV, { invoiceMode: true });
 
   return {
     MerchantID: config.merchantId,
@@ -120,6 +120,7 @@ export async function issueInvoice(
     envelope.Data,
     config.hashKey,
     config.hashIV,
+    { invoiceMode: true },
   );
 
   if (responseData.RtnCode !== 1) {
@@ -168,6 +169,7 @@ export async function voidInvoice(
     envelope.Data,
     config.hashKey,
     config.hashIV,
+    { invoiceMode: true },
   );
 
   if (responseData.RtnCode !== 1) {
