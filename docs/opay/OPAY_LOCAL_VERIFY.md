@@ -84,11 +84,29 @@ curl http://localhost:3001/api/query/invoices?status=issued
 
 ### 6. Refund — 退款
 
+#### 6a. Credit Card Refund (信用卡退款)
+
+Credit card refund requires **close/capture (關帳)** first:
+
+1. After a credit card payment is authorized, capture it:
+   - **Via API**: call `DoAction` with `Action="C"` (the UI can be extended to support this)
+   - **Via backend**: log in to [vendor-stage.opay.tw](https://vendor-stage.opay.tw) → 信用卡收單 → click 【關帳】
+   - **Auto-capture**: enable "每日自動關帳" in 信用卡帳務設定
+2. Wait for capture to complete (system sends capture files to bank at PM 11:59)
+3. Once captured (已關帳), click **退款** → select the credit card order → **執行退款**
+4. Credit card refund uses `DoAction` with `Action="R"`
+
+> Without closing first, refund returns `10000002 更新失敗`.
+
+#### 6b. TWQR Chargeback (TWQR 退款)
+
 1. Click **退款**
-2. Select a paid order from the dropdown
+2. Select a TWQR paid order from the dropdown
 3. Enter refund amount and click **執行退款**
-4. Credit card orders use DoAction (Action=R)
-5. TWQR orders use Chargeback API
+4. TWQR refund uses `POST /TWQRCashier/Chargeback`
+5. On success: `rtnCode=1, rtnMsg=退款成功`, TradeStatus changes to 2 (全額退款)
+
+> TWQR Chargeback uses `rawBase64` (no URL encode on encrypted Data) due to a server-side handler inconsistency.
 
 ### 7. Query Trade — 訂單查詢
 
@@ -111,3 +129,5 @@ pnpm opay:query
 | TWQR timeout | QR codes expire in 10 minutes (default). Try a new one. |
 | `TransCode != 1` | E-Invoice transport layer error. Check Timestamp is within 10 minutes of server time. |
 | Carrier 格式錯誤 | Mobile barcode must start with `/` (e.g. `/ABC+123`). Citizen cert is 16 chars. |
+| Credit refund `10000002 更新失敗` | Must close/capture (關帳) the transaction first. Use `DoAction Action="C"` or enable auto-capture in vendor backend. |
+| TWQR Chargeback `10100051 JSON Parameter Error` | Chargeback handler doesn't URL-decode Data. Use `rawBase64: true` in `aesEncrypt` (no URL encode). |

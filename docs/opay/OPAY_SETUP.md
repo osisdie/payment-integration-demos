@@ -44,10 +44,45 @@ TWQR and E-Invoice APIs use **different** AES encryption sequences:
 
 | API | Encrypt | Decrypt |
 |-----|---------|---------|
-| **TWQR** | JSON → AES → Base64 → URL encode | URL decode → Base64 → AES → JSON |
+| **TWQR** (CreateTrade, QueryTrade) | JSON → AES → Base64 → URL encode | URL decode → Base64 → AES → JSON |
+| **TWQR Chargeback** | JSON → AES → Base64 (**no** URL encode) | Base64 → AES → JSON |
 | **E-Invoice** | JSON → URL encode → AES → Base64 | Base64 → AES → URL decode → JSON |
 
-The code handles this automatically via `invoiceMode` in `aes-encrypt.ts`.
+The code handles this automatically: `invoiceMode` for E-Invoice, `rawBase64` for Chargeback (in `aes-encrypt.ts`).
+
+> **Note**: The TWQR spec (p.23) says "加密後字串做 UrlEncode", but the Chargeback handler does not URL-decode the Data field before Base64-decoding — unlike CreateTrade/QueryTrade which do. This is a server-side inconsistency. Since the body is `application/json`, URL encoding is technically unnecessary; `rawBase64` skips it.
+
+## Credit Card Close/Capture — 信用卡關帳
+
+Credit card payments require **close/capture (關帳)** before a refund can be processed. The flow is:
+
+```
+Authorization (已授權) → Close/Capture (關帳) → Refund (退刷)
+```
+
+### How to close/capture
+
+| Method | How |
+|--------|-----|
+| **API** | `DoAction` with `Action="C"` — supported in `aio-client.ts:doAction()` |
+| **Merchant Backend** | 信用卡收單 → 交易明細查詢 → click 【關帳】 |
+| **Auto-capture** | 廠商專區 → 信用卡帳務設定 → 「每日自動關帳」= ON |
+| **Batch capture** | 信用卡收單 → 整批請款 (manual-capture mode) |
+
+### Timing
+
+- Close/capture files are sent to the bank daily at **PM 11:59**
+- Settlement date is calculated from the capture date
+- After refund succeeds, **do not** cancel the capture — that would cancel the refund
+
+### DoAction Types
+
+| Action | Name | Description |
+|--------|------|-------------|
+| `C` | Close (關帳/請款) | Capture an authorized transaction |
+| `R` | Refund (退刷) | Refund a captured transaction |
+| `E` | Cancel Auth (取消授權) | Cancel before capture (irreversible) |
+| `N` | Void Capture (取消關帳) | Cancel a pending capture |
 
 ## Callback URL (ReturnURL) — 回呼網址
 
@@ -112,4 +147,17 @@ cloudflared tunnel --url http://localhost:3001
 
 ### 加密順序
 
-TWQR 和電子發票的 AES 加密順序不同（詳見上方英文說明），程式透過 `invoiceMode` 自動處理。
+TWQR 和電子發票的 AES 加密順序不同（詳見上方英文說明），程式透過 `invoiceMode` 和 `rawBase64` 自動處理。
+
+TWQR Chargeback 比較特殊：文件寫要 URL encode，但 server 端 handler 不會先 URL decode，所以要用 `rawBase64`（純 Base64 不做 URL encode）。
+
+### 信用卡關帳
+
+信用卡交易流程：**授權 → 關帳 → 退款**。未關帳就操作退刷會失敗（`10000002 更新失敗`）。
+
+關帳方式：
+1. **API**: `DoAction` Action="C"（程式已支援）
+2. **廠商後台**: 信用卡收單 → 交易明細 → 【關帳】
+3. **自動關帳**: 廠商專區 → 信用卡帳務設定 → 「每日自動關帳」= 開
+
+系統每日 PM 11:59 送關帳檔給銀行。撥款日從關帳日起算。

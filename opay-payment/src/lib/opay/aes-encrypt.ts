@@ -26,7 +26,7 @@ export function aesEncrypt(
   data: unknown,
   hashKey: string,
   hashIV: string,
-  options?: { invoiceMode?: boolean },
+  options?: { invoiceMode?: boolean; rawBase64?: boolean },
 ): string {
   const json = typeof data === "string" ? data : JSON.stringify(data);
   const plaintext = options?.invoiceMode ? encodeURIComponent(json) : json;
@@ -38,7 +38,8 @@ export function aesEncrypt(
   let encrypted = cipher.update(plaintext, "utf8", "base64");
   encrypted += cipher.final("base64");
 
-  return options?.invoiceMode ? encrypted : encodeURIComponent(encrypted);
+  if (options?.invoiceMode || options?.rawBase64) return encrypted;
+  return encodeURIComponent(encrypted);
 }
 
 /**

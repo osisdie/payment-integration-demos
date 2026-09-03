@@ -155,7 +155,20 @@ export async function twqrChargeback(opts: {
     RefundAmt: opts.refundAmt,
   };
 
-  const request = buildTwqrRequest(data, config);
+  const checkMacValue = generateCheckMacValue(data, config.hashKey, config.hashIV);
+  const dataWithMac = { ...data, CheckMacValue: checkMacValue };
+
+  // Chargeback uses rawBase64 (no URL encode) per vendor feedback:
+  // their handler expects pure Base64 in the JSON body, unlike
+  // CreateTrade/QueryTrade which accept URL-encoded Base64.
+  const encrypted = aesEncrypt(dataWithMac, config.hashKey, config.hashIV, { rawBase64: true });
+
+  const request: TwqrApiRequest = {
+    MerchantID: config.merchantId,
+    Version: 1,
+    Data: encrypted,
+  };
+  if (config.platformId) request.PlatformID = config.platformId;
 
   const url = `${paymentBaseUrl()}${TWQR_ENDPOINTS.chargeback}`;
   const res = await fetch(url, {
